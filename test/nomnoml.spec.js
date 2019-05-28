@@ -8,7 +8,7 @@ function compClas(type, name, parts){
     return new Compartment([],[new Classifier(type, name, parts)],[])
 }
 
-function c(id){ return { type:'CLASS', parts:[[id]], id:id } }
+function c(name){ return { type:'CLASS', parts:[[name]], name:name } }
 
 function Association(start, assoc, end) {
     return {
@@ -59,15 +59,15 @@ suite.test('skanaar.indexBy', function(){
 
 suite.test('jison parser should handle single class', function(){
     var ast = nomnoml.intermediateParse('[apa]')
-    assertEqual(ast, [c('apa')])
+    assertEqual(ast, part([], [c('apa')], []))
 })
 
 suite.test('jison parser should handle single class with compartments', function(){
     var ast = nomnoml.intermediateParse('[apa|+field: int;#x:int|apply]')
     assertEqual(ast.length, 1)
-    assertEqual(ast[0], {
-        type: 'CLASS',
-        id: 'apa',
+    assertEqual(ast.nodes[0], {
+        t: '<class>',
+        name: 'apa',
         parts:[['apa'],['+field: int','#x:int'],['apply']]
     })
 })

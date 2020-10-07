@@ -399,38 +399,20 @@ var nomnoml;
     }
     nomnoml.intermediateParse = intermediateParse;
     function transformParseIntoSyntaxTree(entity) {
-        function isAstClassifier(obj) {
-            return obj.parts !== undefined;
-        }
-        function isAstRelation(obj) {
-            return obj.assoc !== undefined;
-        }
-        function isAstCompartment(obj) {
-            return Array.isArray(obj);
-        }
         var relationId = 0;
         function transformCompartment(slots) {
-            var lines = [];
-            var rawClassifiers = [];
+            var lines = slots.lines;
+            var rawClassifiers = slots.nodes;
             var relations = [];
-            slots.forEach(function (p) {
-                if (typeof p === 'string')
-                    lines.push(p);
-                if (isAstRelation(p)) {
-                    rawClassifiers.push(p.start);
-                    rawClassifiers.push(p.end);
-                    relations.push({
-                        id: relationId++,
-                        assoc: p.assoc,
-                        start: p.start.parts[0][0],
-                        end: p.end.parts[0][0],
-                        startLabel: { text: p.startLabel },
-                        endLabel: { text: p.endLabel }
-                    });
-                }
-                if (isAstClassifier(p)) {
-                    rawClassifiers.push(p);
-                }
+            slots.rels.forEach(function (p) {
+                relations.push({
+                    id: relationId++,
+                    assoc: p.assoc,
+                    start: p.start,
+                    end: p.end,
+                    startLabel: { text: p.startLabel },
+                    endLabel: { text: p.endLabel }
+                });
             });
             var allClassifiers = rawClassifiers
                 .map(transformClassifier)
@@ -452,7 +434,7 @@ var nomnoml;
         }
         function transformClassifier(entity) {
             var compartments = entity.parts.map(transformCompartment);
-            return new nomnoml.Classifier(entity.type, entity.id, compartments);
+            return new nomnoml.Classifier(entity.type, entity.name, compartments);
         }
         return transformCompartment(entity);
     }
@@ -1500,67 +1482,81 @@ var nomnoml;
   }
 */
 var nomnomlCoreParser = (function(){
-var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,5],$V1=[1,8],$V2=[5,6,12,14],$V3=[12,14],$V4=[1,22];
+var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[1,7],$V1=[1,8],$V2=[1,6],$V3=[1,10],$V4=[5,11,15,17],$V5=[1,12],$V6=[1,15],$V7=[1,16],$V8=[5,7,8,11,13,15,16,17],$V9=[1,28],$Va=[15,17],$Vb=[5,7,8,11,13,15,17];
 var parser = {trace: function trace () { },
 yy: {},
-symbols_: {"error":2,"root":3,"compartment":4,"EOF":5,"SEP":6,"slot":7,"IDENT":8,"class":9,"association":10,"parts":11,"|":12,"[":13,"]":14,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",6:"SEP",8:"IDENT",12:"|",13:"[",14:"]"},
-productions_: [0,[3,2],[3,3],[3,4],[3,3],[7,1],[7,1],[7,1],[4,1],[4,3],[11,1],[11,3],[11,2],[10,3],[9,3]],
+symbols_: {"error":2,"root":3,"partition":4,"EOF":5,"text":6,"LITERAL":7,"TXT":8,"chain":9,"node":10,"SEP":11,"arrow":12,"ARROW":13,"parts":14,"|":15,"[":16,"]":17,"TYPE":18,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",7:"LITERAL",8:"TXT",11:"SEP",13:"ARROW",15:"|",16:"[",17:"]",18:"TYPE"},
+productions_: [0,[3,2],[6,1],[6,1],[6,2],[6,2],[4,1],[4,1],[4,1],[4,3],[4,3],[4,3],[12,1],[12,2],[12,2],[12,3],[9,3],[9,3],[14,1],[14,3],[10,3],[10,4]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
 var $0 = $$.length - 1;
 switch (yystate) {
-case 1: case 2:
+case 1:
  return $$[$0-1] 
 break;
-case 3: case 4:
- return $$[$0-2] 
+case 2:
+this.$ = $$[$0].substr(1);
 break;
-case 5:
-this.$ = $$[$0].trim().replace(/\\(\[|\]|\|)/g, '$'+'1');
-break;
-case 6: case 7:
+case 3: case 6:
 this.$ = $$[$0];
 break;
-case 8: case 10:
-this.$ = [$$[$0]];
+case 4:
+this.$ = $$[$0-1] + $$[$0].substr(1);
+break;
+case 5:
+this.$ = $$[$0-1] + $$[$0];
+break;
+case 7:
+this.$ = Partition([], [$$[$0]], []);
+break;
+case 8:
+this.$ = Partition([$$[$0]], [], []);
 break;
 case 9:
-this.$ = $$[$0-2].concat($$[$0]);
+this.$ = join($$[$0-2].rels, $$[$0].rels) && join($$[$0-2].nodes, $$[$0].nodes) && $$[$0-2];
+break;
+case 10:
+this.$ = cons($$[$0-2].nodes, $$[$0]) && $$[$0-2];
 break;
 case 11:
-this.$ = $$[$0-2].concat([$$[$0]]);
+this.$ = cons($$[$0-2].lines, $$[$0]) && $$[$0-2];
 break;
 case 12:
-this.$ = $$[$0-1].concat([[]]);
+this.$ = { startLabel: '', assoc: $$[$0], endLabel: '' };
 break;
 case 13:
-
-           var t = $$[$0-1].trim().replace(/\\(\[|\]|\|)/g, '$'+'1').match('^(.*?)([<:o+]*[-_]/?[-_]*[:o+>]*)(.*)$');
-           if (!t) {
-             throw new Error('line '+_$[$0].first_line+': Classifiers must be separated by a relation or a line break')
-           }
-           this.$ = {assoc:t[2], start:$$[$0-2], end:$$[$0], startLabel:t[1].trim(), endLabel:t[3].trim()};
-  
+this.$ = { startLabel: $$[$0-1], assoc: $$[$0], endLabel: '' };
 break;
 case 14:
-
-           var type = 'CLASS';
-           var id = $$[$0-1][0][0];
-           var typeMatch = $$[$0-1][0][0].match('<([a-z]*)>(.*)');
-           if (typeMatch) {
-               type = typeMatch[1].toUpperCase();
-               id = typeMatch[2].trim();
-           }
-           $$[$0-1][0][0] = id;
-           this.$ = {type:type, id:id, parts:$$[$0-1]};
-  
+this.$ = { startLabel: '', assoc: $$[$0-1], endLabel: $$[$0] };
+break;
+case 15:
+this.$ = { startLabel: $$[$0-2], assoc: $$[$0-1], endLabel: $$[$0] };
+break;
+case 16:
+this.$ = withRelTo($$[$0-2], $$[$0-1], $$[$0]);
+break;
+case 17:
+this.$ = Partition([], [$$[$0-2],$$[$0]], [Rel($$[$0-2].name,$$[$0-1],$$[$0].name)]);
+break;
+case 18:
+this.$ = [$$[$0]];
+break;
+case 19:
+this.$ = cons($$[$0-2], $$[$0]);
+break;
+case 20:
+this.$ = Node('<class>', $$[$0-1][0].lines[0], $$[$0-1]);
+break;
+case 21:
+this.$ = Node($$[$0-2], $$[$0-1][0].lines[0], $$[$0-1]);
 break;
 }
 },
-table: [{3:1,4:2,6:[1,3],7:4,8:$V0,9:6,10:7,13:$V1},{1:[3]},{5:[1,9],6:[1,10]},{4:11,7:4,8:$V0,9:6,10:7,13:$V1},o($V2,[2,8]),o($V2,[2,5]),o($V2,[2,6],{8:[1,12]}),o($V2,[2,7]),{4:14,7:4,8:$V0,9:6,10:7,11:13,13:$V1},{1:[2,1]},{5:[1,15],7:16,8:$V0,9:6,10:7,13:$V1},{5:[1,17],6:[1,18]},{9:19,13:$V1},{12:[1,21],14:[1,20]},o($V3,[2,10],{6:$V4}),{1:[2,4]},o($V2,[2,9]),{1:[2,2]},{5:[1,23],7:16,8:$V0,9:6,10:7,13:$V1},o($V2,[2,13]),o([5,6,8,12,14],[2,14]),o($V3,[2,12],{7:4,9:6,10:7,4:24,8:$V0,13:$V1}),{7:16,8:$V0,9:6,10:7,13:$V1},{1:[2,3]},o($V3,[2,11],{6:$V4})],
-defaultActions: {9:[2,1],15:[2,4],17:[2,2],23:[2,3]},
+table: [{3:1,4:2,6:5,7:$V0,8:$V1,9:3,10:4,16:$V2},{1:[3]},{5:[1,9],11:$V3},o($V4,[2,6],{12:11,6:13,7:$V0,8:$V1,13:$V5}),o($V4,[2,7],{6:13,12:14,7:$V0,8:$V1,13:$V5}),o($V4,[2,8],{7:$V6,8:$V7}),{4:19,6:5,7:$V0,8:$V1,9:3,10:4,14:17,16:$V2,18:[1,18]},o($V8,[2,2]),o($V8,[2,3]),{1:[2,1]},{6:22,7:$V0,8:$V1,9:20,10:21,16:$V2},{10:23,16:$V2},{6:24,7:$V0,8:$V1,16:[2,12]},{7:$V6,8:$V7,13:[1,25]},{10:26,16:$V2},o($V8,[2,4]),o($V8,[2,5]),{15:$V9,17:[1,27]},{4:19,6:5,7:$V0,8:$V1,9:3,10:4,14:29,16:$V2},o($Va,[2,18],{11:$V3}),o($V4,[2,9],{12:11,6:13,7:$V0,8:$V1,13:$V5}),o($V4,[2,10],{6:13,12:14,7:$V0,8:$V1,13:$V5}),o($V4,[2,11],{7:$V6,8:$V7}),o($Vb,[2,16]),{7:$V6,8:$V7,16:[2,14]},{6:30,7:$V0,8:$V1,16:[2,13]},o($Vb,[2,17]),o($Vb,[2,20]),{4:31,6:5,7:$V0,8:$V1,9:3,10:4,16:$V2},{15:$V9,17:[1,32]},{7:$V6,8:$V7,16:[2,15]},o($Va,[2,19],{11:$V3}),o($Vb,[2,21])],
+defaultActions: {9:[2,1]},
 parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -1707,6 +1703,29 @@ parse: function parse(input) {
     }
     return true;
 }};
+
+  var join = (list, list2) => (list.push(...list2), list)
+  var cons = (list, e) => (list.push(e), list)
+  var last = (list) => (list[list.length-1])
+  var Rel = (start, arrow, end)  => {
+    var assoc = arrow.assoc
+    var startLabel = arrow.startLabel
+    var endLabel = arrow.endLabel
+    return {assoc, start, end, startLabel, endLabel};
+  }
+  var Partition = (lines, nodes, rels)  => ({lines, nodes, rels})
+  var Node = (type, name, parts)  => ({type, name, parts})
+  function withRelTo(part, arrow, node) {
+    part.rels.push({
+      assoc: arrow.assoc,
+      start: last(part.rels).end,
+      end: node.name,
+      startLabel: arrow.startLabel.trim(),
+      endLabel: arrow.endLabel.trim()
+    });
+    part.nodes.push(node);
+    return part;
+  }
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -2035,24 +2054,50 @@ options: {},
 performAction: function anonymous(yy,yy_,$avoiding_name_collisions,YY_START) {
 var YYSTATE=YY_START;
 switch($avoiding_name_collisions) {
-case 0:return 12
+case 0:return 15
 break;
-case 1:return 8
+case 1:return 7
 break;
-case 2:return 13
+case 2:return 7
 break;
-case 3:return 14
+case 3:return 7
 break;
-case 4:return 6
+case 4:return 7
 break;
-case 5:return 5
+case 5:return 7
 break;
-case 6:return 'INVALID'
+case 6:return 7
+break;
+case 7:return 7
+break;
+case 8:return 7
+break;
+case 9:return 7
+break;
+case 10:return 7
+break;
+case 11:return 18
+break;
+case 12:return 13
+break;
+case 13:return 8
+break;
+case 14:return 16
+break;
+case 15:return 17
+break;
+case 16:return 11
+break;
+case 17:;
+break;
+case 18:return 5
+break;
+case 19:return 'INVALID'
 break;
 }
 },
-rules: [/^(?:\s*\|\s*)/,/^(?:(\\(\[|\]|\|)|[^\]\[|;\n])+)/,/^(?:\[)/,/^(?:\s*\])/,/^(?:[ ]*(;|\n)+[ ]*)/,/^(?:$)/,/^(?:.)/],
-conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6],"inclusive":true}}
+rules: [/^(?:[ \n\t]*\|[ \n\t]*)/,/^(?:\\\\)/,/^(?:\\\[)/,/^(?:\\\])/,/^(?:\\\|)/,/^(?:\\;)/,/^(?:\\;)/,/^(?:\\<)/,/^(?:\\>)/,/^(?:\\-)/,/^(?:\\\+)/,/^(?:<[a-zA-Z]+>)/,/^(?:[<>+:_-]+)/,/^(?:[^\[\]|;\n<>+:_-])/,/^(?:\[)/,/^(?:\n*\])/,/^(?:[ ]*[;\n]+[ ]*)/,/^(?:\\s*)/,/^(?:$)/,/^(?:.)/],
+conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"inclusive":true}}
 });
 return lexer;
 })();

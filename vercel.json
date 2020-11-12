@@ -1,0 +1,6 @@
+{
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/image.svg", "destination": "/api/image.js", "permanent": false }
+  ]
+}

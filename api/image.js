@@ -7,8 +7,8 @@ module.exports = function (req, res) {
   try {
     var input = req.url.split('source=')[1]
     if (!input) throw new Error()
-    console.log('rendering: ' + input)
     var source = decodeURIComponent(input)
+    console.log('rendering: ' + source)
     res.end(nomnoml.renderSvg(source))
   }
   catch (e) {
